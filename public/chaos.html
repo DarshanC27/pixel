@@ -10,7 +10,7 @@
 <body>
   <main class="page">
     <h1 class="page-title"><img src="/logo.svg" alt="" width="40" height="40"> Pixel Mart <span>chaos panel</span></h1>
-    <p class="lead">Break the demo shop and watch Pixel react on the <a href="/" target="_blank">stage</a>. Keys 1–8 fire the buttons, 0 fixes everything.</p>
+    <p class="lead">Break the demo shop and watch Pixel react on the <a href="/" target="_blank">stage</a>. Keys 1–8 fire the buttons, 0 fixes everything, R resets the demo.</p>
 
     <div id="buttons" class="chaos-grid"></div>
 
@@ -62,6 +62,7 @@
       await api("/api/chaos", { action: id });
     }
     document.addEventListener("keydown", (e) => {
+      if (e.key.toLowerCase() === "r") return api("/api/reset", {});
       const id = Object.keys(KEYS).find((k) => KEYS[k] === e.key);
       if (id) fire(id);
     });
