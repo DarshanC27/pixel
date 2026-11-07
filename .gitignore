@@ -1,4 +1,5 @@
 node_modules/
+services/data/
 archive/
 .env
 .env.*
