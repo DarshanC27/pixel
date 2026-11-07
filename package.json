@@ -8,8 +8,9 @@
   "scripts": {
     "start": "node server.js",
     "start:sim": "node -e \"process.env.PIXEL_MODE='sim'; import('./server.js')\"",
-    "test": "node test/smoke.js && node test/brain.js && node test/real.js",
-    "test:real": "node test/real.js"
+    "test": "node test/diagnose.js && node test/smoke.js && node test/brain.js && node test/real.js && node test/war.js",
+    "test:real": "node test/real.js",
+    "test:war": "node test/war.js"
   },
   "engines": {
     "node": ">=22.5"

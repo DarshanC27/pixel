@@ -38,6 +38,7 @@ const server = spawn(process.execPath, ["server.js"], {
     PORT: String(PORT),
     PIXEL_OFFLINE: "1",
     PIXEL_MODE: "real",
+    PIXEL_WAR: "off", // this test drives failures by hand; the war test covers autonomy
     PM_DB_PORT: String(PM.db),
     PM_AUTH_PORT: String(PM.auth),
     PM_ORDERS_PORT: String(PM.orders),

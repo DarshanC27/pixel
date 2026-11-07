@@ -23,6 +23,16 @@ if ("speechSynthesis" in window) {
   speechSynthesis.onvoiceschanged = pickVoice;
 }
 
+// Gremlin's voice: deep and slow, so you always know who's talking.
+function speakGremlin(text) {
+  if (!voiceOn || !("speechSynthesis" in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  if (voice) u.voice = voice;
+  u.pitch = 0.35;
+  u.rate = 0.92;
+  speechSynthesis.speak(u);
+}
+
 function speak(text, urgent) {
   pixel.classList.add("talking");
   const stop = () => pixel.classList.remove("talking");
@@ -267,6 +277,35 @@ connect({
   wave: () => replay("waving", 1900),
   external: (ref) => toast(`Declared in incident.io${ref.reference ? `: ${ref.reference}` : ""}`, 6000),
   postmortem: (pm) => openPm(pm),
+
+  // ----- the autonomous war -----
+  arena: renderArena,
+  gremlin: ({ text, attack }) => {
+    $("gremlinSays").textContent = text;
+    $("gremlinStatus").textContent = attack ? `round ${attack.round} · ${attack.name}` : "is plotting…";
+    speakGremlin(text);
+  },
+  attack: (a) => {
+    addDiary({ kind: "attack", at: Date.now(), text: `Gremlin attacks: ${a.name}` });
+    const card = $("gremlinCard");
+    card.classList.remove("attacking", "defeated");
+    void card.offsetWidth;
+    card.classList.add("attacking");
+    document.body.append(Object.assign(document.createElement("div"), { className: "attack-flash" }));
+    setTimeout(() => document.querySelector(".attack-flash")?.remove(), 1100);
+    tone(220, 0.35, 0.05, "sawtooth");
+  },
+  defeated: (a) => {
+    addDiary({ kind: "defended", at: Date.now(), text: `${a.name} defeated in ${(a.ms / 1000).toFixed(1)}s` });
+    const card = $("gremlinCard");
+    card.classList.remove("attacking");
+    card.classList.add("defeated");
+  },
+  antibody: (ab) => {
+    pulse("sAntibodies");
+    toast(`Antibody ${ab.seen > 1 ? "strengthened" : "stored"}: ${ab.cause}`);
+  },
+  "postmortem-filed": ({ id }) => toast(`Postmortem for ${id} filed automatically`),
   reset: () => {
     $("diary").replaceChildren();
     $("logs").replaceChildren();
@@ -283,6 +322,10 @@ api("/api/state").then((s) => {
   renderState(s);
   s.diary.forEach(addDiary);
   addLogs(s.logs);
+});
+api("/api/war").then((w) => {
+  renderArena(w);
+  if (w.on) $("wakeNote").textContent = "The war is already running on its own. Tap to hear Pixel and Gremlin.";
 });
 api("/api/health").then((h) => {
   $("brainMode").textContent = h.llm ? "Brain: Claude" : "Brain: offline";
@@ -356,6 +399,9 @@ function openPm(pm) {
   if (!$("pmDialog").open) $("pmDialog").showModal();
 }
 $("pmBtn").addEventListener("click", async () => {
+  // In war mode Pixel has already filed one: show the latest. Otherwise write one now.
+  const latest = await api("/api/postmortems/latest").catch(() => null);
+  if (latest?.id) return openPm(latest);
   $("pmBtn").textContent = "Writing…";
   try { await api("/api/postmortem", {}); } finally { $("pmBtn").textContent = "Postmortem"; }
 });
@@ -366,6 +412,54 @@ $("pmDownload").addEventListener("click", () => {
   const a = el("a", { href: URL.createObjectURL(new Blob([lastPm.markdown], { type: "text/markdown" })), download: `${lastPm.id || "postmortem"}.md` });
   a.click();
 });
+
+// ---------- arena ----------
+let lastDefended = -1;
+function pulse(id) {
+  const t = $(id)?.closest(".tile");
+  if (!t) return;
+  t.classList.remove("pulse");
+  void t.offsetWidth;
+  t.classList.add("pulse");
+}
+
+function renderArena(w) {
+  if (!w?.on) return;
+  $("arena").hidden = false;
+  $("abBox").hidden = !w.antibodies.length;
+  $("sDefended").textContent = `${w.defended}/${w.launched}`;
+  if (w.defended !== lastDefended) {
+    if (lastDefended >= 0) pulse("sDefended");
+    lastDefended = w.defended;
+  }
+  $("sOrders").textContent = w.ordersPlaced.toLocaleString();
+  $("sLost").textContent = w.ordersLost.toLocaleString();
+  $("sRecovery").textContent = w.lastRecoveryMs != null ? `${(w.lastRecoveryMs / 1000).toFixed(1)}s` : "–";
+  $("sAntibodies").textContent = w.antibodies.length;
+  if (!w.gremlin.current && w.gremlin.nextInMs != null) $("gremlinStatus").textContent = w.gremlin.round ? `next attack in ${Math.ceil(w.gremlin.nextInMs / 1000)}s` : "is studying your system…";
+
+  // Learning curve: one bar per defence; green = vaccinated, blue = recognised, purple = first time.
+  const h = w.history;
+  const max = Math.max(5000, ...h.map((x) => x.ms));
+  const bw = 240 / Math.max(8, h.length);
+  $("curve").innerHTML = h
+    .map((x, i) => {
+      const hgt = Math.max(3, (x.ms / max) * 62);
+      const c = x.vaccinated ? "#46e2a8" : x.known ? "#7cd4ff" : "#8f52ff";
+      return `<rect x="${i * bw + 2}" y="${68 - hgt}" width="${bw - 4}" height="${hgt}" rx="3" fill="${c}"><title>${x.sig}: ${(x.ms / 1000).toFixed(1)}s${x.vaccinated ? " (vaccinated)" : x.known ? " (from memory)" : " (first time)"}</title></rect>`;
+    })
+    .join("");
+
+  // Only rebuild the antibody cards when they change (otherwise their entrance animation replays every second).
+  const abKey = w.antibodies.map((a) => `${a.sig}:${a.seen}:${a.bestMs}`).join("|");
+  if (abKey === renderArena.abKey) return;
+  renderArena.abKey = abKey;
+  $("antibodies").replaceChildren(
+    ...w.antibodies
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .map((a) => el("li", {}, el("b", {}, a.cause.charAt(0).toUpperCase() + a.cause.slice(1)), el("span", {}, `seen ${a.seen}× · best ${(a.bestMs / 1000).toFixed(1)}s · fix: ${a.fix.replace(/_/g, " ")}`))),
+  );
+}
 
 function replay(cls, ms) {
   pixel.classList.remove(cls);

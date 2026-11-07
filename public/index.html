@@ -25,12 +25,47 @@
 
   <div id="offline" class="offline-banner" hidden>Lost connection to Pixel. Reconnecting…</div>
 
+  <!-- The autonomous war: Gremlin attacks, Pixel's immune system defends. Nobody presses anything. -->
+  <section id="arena" class="arena" hidden aria-label="Pixel versus Gremlin">
+    <div class="gremlin-card" id="gremlinCard">
+      <svg class="gremlin" viewBox="0 0 120 120" aria-hidden="true">
+        <path d="M30 40 L18 8 L44 30 Z M90 40 L102 8 L76 30 Z" fill="#7a3cff"/>
+        <path d="M14 60 L2 48 L20 52 Z M106 60 L118 48 L100 52 Z" fill="#5b25d1"/>
+        <ellipse cx="60" cy="64" rx="44" ry="40" fill="#8f52ff" stroke="#4a1aa8" stroke-width="3"/>
+        <ellipse cx="46" cy="44" rx="16" ry="9" fill="#fff" opacity=".18" transform="rotate(-20 46 44)"/>
+        <path d="M34 56 L50 62 L34 66 Z M86 56 L70 62 L86 66 Z" fill="#ffe14d"/>
+        <circle cx="40" cy="61" r="2.5" fill="#1b1d2e"/><circle cx="80" cy="61" r="2.5" fill="#1b1d2e"/>
+        <path d="M38 80 Q60 98 82 80 Q60 88 38 80 Z" fill="#1b1d2e"/>
+        <path d="M44 82 l4 6 4 -5 4 6 4 -6 4 6 4 -5 4 5" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M100 92 Q116 100 110 112 l6 2 -8 4" fill="none" stroke="#5b25d1" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <div class="gremlin-text">
+        <div class="gremlin-name">GREMLIN <span id="gremlinStatus">is watching…</span></div>
+        <div id="gremlinSays" class="gremlin-says">Your system looks… breakable.</div>
+      </div>
+    </div>
+    <div class="score">
+      <div class="tile"><b id="sDefended">0/0</b><span>attacks defended</span></div>
+      <div class="tile"><b id="sOrders">0</b><span>orders placed · <em id="sLost">0</em> lost</span></div>
+      <div class="tile"><b id="sRecovery">–</b><span>last recovery</span></div>
+      <div class="tile"><b id="sAntibodies">0</b><span>antibodies</span></div>
+    </div>
+    <div class="curve">
+      <div class="curve-title">Learning curve <span>seconds to recover, per defence</span></div>
+      <svg id="curve" viewBox="0 0 240 70" preserveAspectRatio="none" aria-label="Recovery time for each defence"></svg>
+    </div>
+  </section>
+
   <main class="stage-grid">
     <!-- Vitals -->
     <section class="panel vitals" aria-label="Vitals">
       <h2>Vitals</h2>
       <ul id="vitals"></ul>
       <p class="hint">Each organ is one part of the system. Health comes from plain code, never from the AI.</p>
+      <div id="abBox" hidden>
+        <h2 class="ab-title">Antibodies</h2>
+        <ul id="antibodies" class="antibodies"></ul>
+      </div>
     </section>
 
     <!-- Pixel -->
@@ -211,7 +246,7 @@
   <div id="wake" class="wake">
     <img src="/logo.svg" alt="" width="96" height="96" class="wake-logo">
     <button id="wakeBtn">Tap to wake Pixel</button>
-    <p>Turns on Pixel's voice. Open <a href="/chaos" target="_blank">/chaos</a> on another screen to break things.</p>
+    <p id="wakeNote">Turns on Pixel's voice. Open <a href="/chaos" target="_blank">/chaos</a> on another screen to break things.</p>
   </div>
 
   <dialog id="pmDialog" class="pm">

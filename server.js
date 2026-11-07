@@ -19,6 +19,8 @@ import { llmAvailable, modelName } from "./lib/llm.js";
 import { integrationStatus, slackPage, declareIncident, updateIncidentSummary } from "./lib/integrations.js";
 import { fromAlertmanager, fromSentry, startPrometheus, startProbes } from "./lib/adapters.js";
 import { createStack } from "./lib/stack.js";
+import { createImmune } from "./lib/immune.js";
+import { createGremlin } from "./lib/gremlin.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(__dirname, "public");
@@ -104,6 +106,7 @@ function tick() {
     broadcast("diary", { kind: "recovered", at: Date.now(), incident: inc.id });
     broadcast("recovered", { id: inc.id });
     say(lineForIncidentEnd(inc), "recovered");
+    if (immune) autoPostmortem(inc).catch((err) => console.warn("[postmortem]", err.message));
     if (inc.external) updateIncidentSummary(inc.external.id, `Recovered after ${duration(inc.endedAt - inc.startedAt)}. Pixel's postmortem is available on the stage.`);
   } else if (start) {
     const inc = start.incident;
@@ -140,6 +143,78 @@ function tick() {
   }
 
   broadcast("state", { ...snap, metrics: roundMetrics(metrics), faults: sim.faults, at: Date.now() });
+
+  // Autonomous war: the immune system reads the same evidence and acts on its own.
+  if (immune) {
+    immune.onTick(events, snap, sim.logs);
+    broadcast("arena", arenaStats());
+  }
+}
+
+// ---------- the autonomous war (real mode) ----------
+
+let immune = null;
+let gremlin = null;
+let war = null; // scoreboard
+const postmortems = []; // filed automatically
+
+function arenaStats() {
+  const b = sim.business || {};
+  const hist = immune.history();
+  const recent = hist.filter((h) => !h.vaccinated);
+  const firstTimes = {};
+  for (const h of hist) firstTimes[h.sig] ??= h.ms;
+  return {
+    on: true,
+    gremlin: gremlin.stats(),
+    defended: war.defended,
+    launched: war.launched,
+    vaccinated: hist.filter((h) => h.vaccinated).length,
+    ordersPlaced: Math.max(0, (b.checkouts || 0) - war.checkoutsAtStart - ((b.failed || 0) - war.failedAtStart)),
+    ordersLost: Math.max(0, (b.failed || 0) - war.failedAtStart),
+    lastRecoveryMs: hist.at(-1)?.ms ?? null,
+    avgRecoveryMs: recent.length ? Math.round(recent.reduce((a, h) => a + h.ms, 0) / recent.length) : null,
+    antibodies: immune.antibodies(),
+    history: hist.slice(-12),
+    postmortems: postmortems.slice(-10).map(({ id, at, source }) => ({ id, at, source })),
+    workers: sim.workerCount(),
+  };
+}
+
+function startWar() {
+  war = { launched: 0, defended: 0, checkoutsAtStart: sim.business.checkouts || 0, failedAtStart: sim.business.failed || 0, startedAt: Date.now() };
+  immune = createImmune({
+    stack: sim,
+    say: (text, kind) => {
+      console.log(`  [pixel] ${text}`);
+      say(text, kind);
+    },
+    broadcast,
+  });
+  gremlin = createGremlin({
+    stack: sim,
+    getState: () => body.snapshot(),
+    say: (text, attack) => broadcast("gremlin", { text, attack, at: Date.now() }),
+    onLaunch: (a) => {
+      war.launched++;
+      broadcast("attack", a);
+    },
+    onDefeated: (a, ms) => {
+      war.defended++;
+      broadcast("defeated", { ...a, ms });
+    },
+  });
+  console.log("  War: Gremlin attacks autonomously; Pixel's immune system defends, learns and files postmortems");
+}
+
+async function autoPostmortem(inc) {
+  const pm = await writePostmortem(inc, sim.logs);
+  postmortems.push({ id: inc.id, at: Date.now(), ...pm });
+  broadcast("postmortem-filed", { id: inc.id, source: pm.source });
+  if (inc.external) {
+    const summary = pm.markdown.split(/\n## /)[1]?.replace(/^Summary\s*/, "").trim().slice(0, 1500);
+    if (summary) updateIncidentSummary(inc.external.id, `Pixel's postmortem summary: ${summary}`);
+  }
 }
 
 function roundMetrics(m) {
@@ -272,6 +347,10 @@ const routes = {
     return { ok: true };
   },
 
+  "GET /api/war": async () => (immune ? arenaStats() : { on: false }),
+
+  "GET /api/postmortems/latest": async () => postmortems.at(-1) || { markdown: "# No postmortems yet\n\nPixel files one automatically after every incident." },
+
   "POST /api/reset": async () => {
     if (MODE === "real") await sim.reset(); // heal the real stack: restart, roll back, scale down
     else sim = createSim();
@@ -351,6 +430,7 @@ server.listen(PORT, "0.0.0.0", async () => {
   const sink = { ingestSignal: (s) => body.ingestSignal(s) };
   startPrometheus(sink);
   startProbes(sink);
+  if (MODE === "real" && process.env.PIXEL_WAR !== "off") startWar();
   if (MODE === "real") {
     console.log(`\n  Pixel Mart is running for real: ${sim.processes().length} processes`);
     for (const p of sim.processes()) console.log(`    ${p.name.padEnd(12)} pid ${String(p.pid).padEnd(7)} ${p.port ? `port ${p.port}` : ""}`);

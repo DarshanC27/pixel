@@ -23,6 +23,20 @@ This starts **Pixel and a real online shop it watches**. Then open:
 | On-call phone | http://localhost:3000/oncall | A real phone on the same Wi-Fi (the server prints the address) |
 | **The real shop** | http://127.0.0.1:4105/ | Buy something yourself while you break things |
 
+## Nobody presses anything: Pixel vs. Gremlin
+
+![Pixel vs Gremlin, live](docs/screenshots/5-war.jpg)
+
+Start it and walk away. An autonomous war runs on the real system, forever:
+
+- **Gremlin** (the attacker) waits until the shop is healthy, then strikes: kills the database, ships a bad deploy, floods the queue, slowly leaks query performance, or hides a prompt injection in the logs before striking. It learns too: it targets what Pixel has never seen, then what Pixel recovers from most slowly, then chains attacks.
+- **Pixel's immune system** defends with no human input. It sees only what any on-call system sees (real metrics and untrusted logs) and is never told what Gremlin did. It **detects**, **diagnoses** the root cause from evidence, **runs the real fix** (restart, rollback, traffic shift, scale out), **verifies** it worked, and **escalates** if it didn't.
+- **Antibodies.** Every defeated attack becomes a saved memory (`services/data/antibodies.json`). The next identical attack is fixed immediately; a known slow leak is **vaccinated** before it ever becomes an incident. The learning curve on screen shows recovery times shrinking.
+- **Self-documenting.** A postmortem is written and filed automatically after every incident (and posted to incident.io if connected).
+- **Guardrails.** Only pre-approved, reversible fixes; at most one action every 2 seconds; three attempts and then it stops and asks for a human; logs that address an AI are never used as evidence.
+
+`PIXEL_WAR=off` turns the war off; the chaos panel still works for manual demos.
+
 ## It's real
 
 Pixel isn't watching a simulation. `node server.js` starts **Pixel Mart**, a real online shop made of six separate programs talking over the network:
@@ -171,7 +185,9 @@ lib/organs.js        Body map and health curves
 lib/body.js          Deterministic health, incidents, diary
 lib/brain.js         Personality, injection detection, questions, postmortems
 lib/llm.js           Optional Claude client (falls back offline)
-lib/stack.js         Starts, measures and breaks the real Pixel Mart processes
+lib/stack.js         Starts, measures, breaks and repairs the real Pixel Mart processes
+lib/gremlin.js       The autonomous attacker
+lib/immune.js        The autonomous immune system: diagnose, fix, verify, learn
 services/            Pixel Mart: db, auth, orders, worker, web, customers
 lib/integrations.js  Slack and incident.io (optional, outbound)
 lib/adapters.js      Prometheus, Alertmanager, Sentry (optional, inbound)
