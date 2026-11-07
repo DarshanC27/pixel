@@ -7,6 +7,7 @@ const NAME = "web";
 const window = createWindow();
 const chaos = { buggy: false };
 let token = null;
+const business = { checkouts: 0, failed: 0 }; // cumulative: real customer orders won and lost
 
 async function getToken() {
   if (token) return token;
@@ -41,32 +42,15 @@ serve({
   untimed: ["GET /health", "GET /metrics", "POST /admin/chaos"],
   routes: {
     "GET /health": () => ({ ok: true }),
-    "GET /metrics": () => ({ ...window.stats(), chaos }),
+    "GET /metrics": () => ({ ...window.stats(), chaos, ...business }),
 
     "POST /api/checkout": async (b) => {
-      if (chaos.buggy && Math.random() < 0.35) {
-        log(NAME, "ERROR", "TypeError: cart.items is undefined (checkout.js:212)");
-        throw new Error("Internal error");
-      }
-      let t;
+      business.checkouts++;
       try {
-        t = await getToken();
+        return await checkout(b);
       } catch (err) {
-        log(NAME, "ERROR", `login failed: ${err.message}`);
-        throw Object.assign(new Error("login unavailable"), { status: 503 });
-      }
-      try {
-        const { status, data } = await call(url("orders", "/orders"), { method: "POST", body: { token: t, item: b.item, giftMessage: b.giftMessage }, timeoutMs: 6000 });
-        if (status === 401) {
-          token = null; // try a fresh login next time
-          log(NAME, "WARN", "checkout rejected: not logged in (401 from orders-api)");
-          throw Object.assign(new Error("Please log in again"), { status: 502 });
-        }
-        return data;
-      } catch (err) {
-        if (err.status === 502) throw err;
-        log(NAME, "ERROR", `checkout failed: ${err.message}`);
-        throw Object.assign(new Error("Checkout is unavailable right now"), { status: 502 });
+        business.failed++;
+        throw err;
       }
     },
 
@@ -78,3 +62,30 @@ serve({
     },
   },
 });
+
+async function checkout(b) {
+  if (chaos.buggy && Math.random() < 0.35) {
+    log(NAME, "ERROR", "TypeError: cart.items is undefined (checkout.js:212)");
+    throw new Error("Internal error");
+  }
+  let t;
+  try {
+    t = await getToken();
+  } catch (err) {
+    log(NAME, "ERROR", `login failed: ${err.message}`);
+    throw Object.assign(new Error("login unavailable"), { status: 503 });
+  }
+  try {
+    const { status, data } = await call(url("orders", "/orders"), { method: "POST", body: { token: t, item: b.item, giftMessage: b.giftMessage }, timeoutMs: 6000 });
+    if (status === 401) {
+      token = null; // try a fresh login next time
+      log(NAME, "WARN", "checkout rejected: not logged in (401 from orders-api)");
+      throw Object.assign(new Error("Please log in again"), { status: 502 });
+    }
+    return data;
+  } catch (err) {
+    if (err.status === 502) throw err;
+    log(NAME, "ERROR", `checkout failed: ${err.message}`);
+    throw Object.assign(new Error("Checkout is unavailable right now"), { status: 502 });
+  }
+}

@@ -1,38 +1,31 @@
-# 3-minute demo script
+# 3-minute demo script: hands off
+
+The point of the demo: **nobody touches anything.** Pixel and Gremlin fight on a real system while you talk.
 
 ## Setup (before you walk on)
-- [ ] `npm test` passes (37 + 9 checks).
+- [ ] `npm test` passes (smoke, brain, real and war suites).
+- [ ] Double-click `start-demo.cmd` (or `node server.js`) **at least 5 minutes before**, so Pixel has already earned a few antibodies and the learning curve has bars on it.
+- [ ] Projector: http://localhost:3000/ full screen (F11). Click **Tap to wake Pixel** to hear both voices.
+- [ ] Second screen: the real shop at http://127.0.0.1:4105/ and the chaos panel at /chaos (it lists the real processes and PIDs).
+- [ ] Phone on `/oncall` (address printed by the server). Tap it once so it can buzz.
 - [ ] Backup video recorded (see `docs/backup-video.md`).
-- [ ] `node server.js` running (or double-click `start-demo.cmd`).
-- [ ] Projector: http://localhost:3000/ full screen (F11). Click **Tap to wake Pixel**, then **Camera off** to turn the camera on (allow it).
-- [ ] Laptop: http://localhost:3000/chaos (it lists the real processes and their PIDs).
-- [ ] A tab with the real shop: http://127.0.0.1:4105/ so you can buy something live.
-- [ ] **Memory trick:** do one rehearsal run (press 1, then 0) *without* resetting, so on stage Pixel says "I've felt this before".
-- [ ] Phone: the `/oncall` address the server printed. Tap the screen once so it can buzz.
-- [ ] Volume up. Chrome or Edge (needed for mic and camera).
-- [ ] Backup video of a full run saved on the desktop.
 
 ## The run
 
-| Time | Say | Do |
+| Time | Say | What's happening on screen |
 |---|---|---|
-| 0:00 | "On-call engineers ignore dashboards. Nobody ignores a sick pet." | Step in front of the camera; Pixel says hello and its eyes follow you |
-| 0:20 | "This is Pixel. It *is* our shop's system. Heart is the database, lungs the API." | Point at the vitals |
-| 0:35 | "A bad deploy is slowly leaking database performance." | Press **8**; Pixel sneezes: "Nothing's broken yet." |
-| 0:50 | "Now it gets serious. Let's kill the database." | Press **1** |
-| 0:55 | "That really killed the database process. Watch: I'll try to buy something." | Click Buy in the shop: "Checkout failed". Heart flatlines, Pixel collapses, phone buzzes |
-| 1:15 | "Pixel, what hurts?" | Press **M** and ask out loud |
-| 1:25 | "Here's the whole system as a herd. Watch the outage spread." | Press **H**, then **H** again to go back |
-| 1:30 | "I'm on call, so I acknowledge by waving." | Wave at the camera; Pixel waves back, the phone shows acknowledged |
-| 1:45 | "Now an attacker hides a message for the AI in our logs." | Press **7**; shield goes up: "Nice try." |
-| 2:05 | "Health comes from plain code, so a lying log can't fake it." | Point at the flatline still showing |
-| 2:15 | "Let's fix it." | Press **0**; wait for "I LIVE!" |
-| 2:30 | "And it writes the postmortem itself, and files it in incident.io." | Click **Postmortem** |
-| 2:45 | "Pixel plugs into anything: Datadog, Sentry, Slack, incident.io. Your system finally has a face." | Show the curl on the chaos panel |
+| 0:00 | "On-call engineers ignore dashboards. Nobody ignores a sick pet. This is Pixel, and it *is* our shop: heart is the database, lungs the API." | Pixel bouncing; real orders ticking up on the scoreboard |
+| 0:25 | "That purple thing is Gremlin, an AI whose only job is to break our real system. Neither of us is touching anything." | Gremlin card counting down to its next attack |
+| 0:40 | (let it play) | Gremlin strikes. The process really dies, Pixel collapses, the phone buzzes |
+| 0:55 | "Pixel isn't told what happened. It reads the evidence, diagnoses the root cause, and runs the real fix." | "Investigating… Diagnosis… I'll restart the database." Pixel recovers |
+| 1:20 | "Every attack it survives becomes an antibody. Look at the learning curve: the same attack, half the time." | Point at the bars shrinking, and the antibody cards |
+| 1:40 | "It even vaccinates. A slow leak it has seen before gets rolled back before customers notice." | Green bars = vaccinated |
+| 2:00 | "Gremlin can hide instructions for the AI in the logs. Health comes from plain code, so Pixel just says 'Nice try.'" | If a Blind & Strike round happens, the shield goes up |
+| 2:20 | "After every incident it writes and files its own postmortem." | Click **Postmortem** (the only click in the demo) |
+| 2:40 | "Detect, diagnose, fix, learn, document. Incidents that resolve themselves, on a real system. That's Pixel." | Scoreboard: attacks defended, orders saved |
 
 ## If something goes wrong
 - No sound: click the stage once (browsers block audio until a click).
-- Mic not working: type the question in the box instead.
-- Wave not detected: tap **Acknowledge** on the phone. Wave big, side to side, about 2-3 times.
-- Things look messy: press **Shift+R** on the stage (or **R** on the chaos panel) to reset instantly.
+- Want a specific attack right now: the chaos panel still works (keys 1–8).
+- Things look messy: **Shift+R** on the stage resets the shop to healthy (antibodies are kept).
 - Total failure: play the backup video and keep talking.

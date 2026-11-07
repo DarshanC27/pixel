@@ -50,6 +50,14 @@ Pixel raises a glowing immune shield and says **"Nice try."** It can't be fooled
 3. **A lie guard** rejects any AI reply that claims "everything's fine" while an organ is sick.
 4. **The postmortem records every injection attempt** as a security finding.
 
+## Nobody touches anything
+
+Start Pixel and walk away. **Gremlin**, an autonomous attacker AI, picks its own targets in the real shop and strikes: it kills the database, ships bad deploys, floods the queue, leaks query performance, and hides prompt injections in the logs before striking. It learns which attacks hurt Pixel most.
+
+**Pixel's immune system** defends with no human in the loop. It is never told what Gremlin did; like a real on-call engineer it reads metrics and logs, diagnoses the root cause, runs the real fix, verifies it, and escalates if it didn't work. Every defeated attack becomes an **antibody** saved to disk: the second time the database is killed, Pixel fixed it in half the time (6.0s → 3.0s in our test), and a known slow leak is **vaccinated** before it ever becomes an incident. After each incident it writes and files its own postmortem.
+
+Detect → diagnose → fix → verify → learn → document, autonomously, on a real system. That's the future of incident response we wanted to show.
+
 ## It's a real, working prototype
 
 Pixel isn't animating fake numbers. One command starts **Pixel Mart**, a real online shop: six separate programs (a SQL database, auth, an orders API, job workers, a storefront and a stream of shoppers) talking over the network. You can open the shop and buy something yourself.

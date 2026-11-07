@@ -76,6 +76,7 @@ export function diaryText(d) {
   if (d.kind === "injection") return `Blocked a prompt injection in ${d.svc || "the"} logs`;
   if (d.kind === "recovered") return `Fully recovered. ${d.incident || ""} closed`;
   if (d.kind === "warning") return `Achoo: ${SYSTEM_NAMES[d.organ]} creeping up`;
+  if (d.kind === "attack" || d.kind === "defended") return d.text;
   if (d.kind === "memory") return `Remembered this from ${d.past}`;
   return d.kind;
 }
