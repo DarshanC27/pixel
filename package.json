@@ -7,10 +7,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node test/smoke.js && node test/brain.js"
+    "start:sim": "node -e \"process.env.PIXEL_MODE='sim'; import('./server.js')\"",
+    "test": "node test/smoke.js && node test/brain.js && node test/real.js",
+    "test:real": "node test/real.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.5"
   },
   "optionalDependencies": {
     "@anthropic-ai/sdk": "*"

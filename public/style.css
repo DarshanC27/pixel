@@ -313,6 +313,15 @@ dialog.pm::backdrop { background: rgba(5,7,15,.7); }
 .chaos-btn.poison { border-color: var(--shield); }
 .chaos-btn.heal { background: var(--good); color: #062018; } .chaos-btn.heal span, .chaos-btn.heal kbd { color: #0b3a2b; border-color: #0b3a2b55; }
 .chaos-btn.fired { animation: pop .35s; }
+.real-panel { margin-top: 16px; }
+.real-panel[hidden] { display: none; }
+.real-panel h2 span { color: var(--good); text-transform: none; letter-spacing: 0; }
+.procs { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.proc { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.proc span { font-size: 13px; color: var(--good); font-weight: 600; }
+.proc small { color: var(--muted); font-size: 12px; }
+.proc.down { border-color: var(--crit); background: rgba(255,77,109,.12); }
+.proc.down span { color: var(--crit); }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
 @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
 table.metrics { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }

@@ -5,7 +5,8 @@
 - [ ] Backup video recorded (see `docs/backup-video.md`).
 - [ ] `node server.js` running (or double-click `start-demo.cmd`).
 - [ ] Projector: http://localhost:3000/ full screen (F11). Click **Tap to wake Pixel**, then **Camera off** to turn the camera on (allow it).
-- [ ] Laptop: http://localhost:3000/chaos.
+- [ ] Laptop: http://localhost:3000/chaos (it lists the real processes and their PIDs).
+- [ ] A tab with the real shop: http://127.0.0.1:4105/ so you can buy something live.
 - [ ] **Memory trick:** do one rehearsal run (press 1, then 0) *without* resetting, so on stage Pixel says "I've felt this before".
 - [ ] Phone: the `/oncall` address the server printed. Tap the screen once so it can buzz.
 - [ ] Volume up. Chrome or Edge (needed for mic and camera).
@@ -19,7 +20,7 @@
 | 0:20 | "This is Pixel. It *is* our shop's system. Heart is the database, lungs the API." | Point at the vitals |
 | 0:35 | "A bad deploy is slowly leaking database performance." | Press **8**; Pixel sneezes: "Nothing's broken yet." |
 | 0:50 | "Now it gets serious. Let's kill the database." | Press **1** |
-| 0:55 | (let it play) | Heart flatlines, Pixel collapses, phone buzzes, Pixel remembers the last incident |
+| 0:55 | "That really killed the database process. Watch: I'll try to buy something." | Click Buy in the shop: "Checkout failed". Heart flatlines, Pixel collapses, phone buzzes |
 | 1:15 | "Pixel, what hurts?" | Press **M** and ask out loud |
 | 1:25 | "Here's the whole system as a herd. Watch the outage spread." | Press **H**, then **H** again to go back |
 | 1:30 | "I'm on call, so I acknowledge by waving." | Wave at the camera; Pixel waves back, the phone shows acknowledged |
