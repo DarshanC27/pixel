@@ -42,6 +42,22 @@ export function el(tag, attrs = {}, ...children) {
   return n;
 }
 
+// Tiny organ icons for lists (same shapes as on Pixel's body).
+const ICON_PATHS = {
+  heart: '<path d="M12 20C5 15 4 9 8 8.5c2-.2 3.4 1 4 2 .6-1 2-2.2 4-2 4 .5 3 6.5-4 11.5z"/>',
+  lungs: '<ellipse cx="8" cy="13" rx="4.2" ry="6"/><ellipse cx="16" cy="13" rx="4.2" ry="6"/>',
+  brain: '<path d="M7 13c-2-2 0-5 2.5-4 1-2 4.5-2 5 0 2.5-.6 4 2 2 4 .8 2-2 3.5-3.5 2.5-1.3 1.3-3.7 1.3-4.4 0C6 18 5 15 7 13z"/>',
+  stomach: '<ellipse cx="12" cy="13" rx="8" ry="5"/>',
+  skin: '<circle cx="7" cy="9" r="2.2"/><circle cx="15" cy="7" r="1.8"/><circle cx="12" cy="14" r="2.4"/><circle cx="17" cy="16" r="2"/><circle cx="7" cy="17" r="1.7"/>',
+};
+export function organIcon(id) {
+  const span = document.createElement("span");
+  span.className = `organ-icon oi-${id}`;
+  span.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">${ICON_PATHS[id] || ""}</svg>`;
+  return span;
+}
+export const STATUS_WORD = { ok: "Healthy", uneasy: "Uneasy", sick: "Sick", critical: "Critical", dead: "Stopped" };
+
 const ORGAN_NAMES = { heart: "Heart", lungs: "Lungs", brain: "Brain", stomach: "Stomach", skin: "Skin" };
 const SYSTEM_NAMES = { heart: "database", lungs: "API", brain: "auth", stomach: "queue", skin: "front end" };
 
