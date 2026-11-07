@@ -1,4 +1,4 @@
-import { connect, api, clock, el, fmt, diaryText, markdown } from "/common.js";
+import { connect, api, clock, el, fmt, diaryText, markdown, organIcon, STATUS_WORD } from "/common.js";
 
 const $ = (id) => document.getElementById(id);
 const pixel = $("pixel");
@@ -8,6 +8,7 @@ let audio = null; // AudioContext, created on wake
 let lastHeart = "ok";
 let state = null;
 let lastPm = null;
+let offlineTimer = null;
 
 // ---------- voice ----------
 let voice = null;
@@ -90,8 +91,10 @@ function renderState(s) {
       el(
         "li",
         { class: `vital st-${o.status}` },
+        organIcon(o.id),
         el("span", { class: "name" }, o.name, el("small", {}, o.system)),
-        el("span", { class: "val" }, o.status === "dead" ? "STOPPED" : fmt(o)),
+        el("span", { class: "val" }, o.status === "dead" ? "—" : fmt(o)),
+        el("span", { class: "pill" }, STATUS_WORD[o.status]),
         el("span", { class: "bar" }, Object.assign(el("span"), { style: `width:${o.health}%` })),
         o.source !== "pixel-mart" ? el("span", { class: "src" }, `via ${o.source}`) : null,
       ),
@@ -194,8 +197,19 @@ requestAnimationFrame(drawEcg);
 
 // ---------- live connection ----------
 connect({
-  online: () => { $("conn").textContent = "Live"; $("conn").className = "chip chip-ok"; },
-  offline: () => { $("conn").textContent = "Reconnecting…"; $("conn").className = "chip chip-quiet"; },
+  online: () => {
+    $("conn").textContent = "Live";
+    $("conn").className = "chip chip-ok";
+    $("offline").hidden = true;
+    clearTimeout(offlineTimer);
+  },
+  offline: () => {
+    $("conn").textContent = "Reconnecting…";
+    $("conn").className = "chip chip-quiet";
+    // Only shout about it if it lasts; brief blips are normal.
+    clearTimeout(offlineTimer);
+    offlineTimer = setTimeout(() => ($("offline").hidden = false), 2500);
+  },
   state: renderState,
   say: showSay,
   diary: addDiary,
