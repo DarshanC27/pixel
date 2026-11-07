@@ -2,7 +2,11 @@
 
 Pixel is a live creature that **is** your software system. When the system breaks, Pixel gets sick in the matching body part, tells you out loud where it hurts, pages the on-call engineer in character, blocks prompt-injection attacks hidden in logs, and writes the postmortem when it recovers.
 
-Built for the incident.io challenge: *a live agent with personality that reacts in real time.*
+Built for the incident.io challenge: *a live agent with personality that reacts in real time.* Read the full story in [SUBMISSION.md](SUBMISSION.md).
+
+| Healthy | Database down, injection blocked | The herd during an outage |
+|---|---|---|
+| ![Healthy](docs/screenshots/1-healthy.jpg) | ![Collapsed with shield](docs/screenshots/2-collapsed-shield.jpg) | ![Herd](docs/screenshots/3-herd-outage.jpg) |
 
 ## Run it (30 seconds)
 
