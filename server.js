@@ -17,6 +17,7 @@ import {
 import { STATUS_RANK } from "./lib/organs.js";
 import { llmAvailable, modelName } from "./lib/llm.js";
 import { integrationStatus, slackPage, declareIncident, updateIncidentSummary } from "./lib/integrations.js";
+import { fromAlertmanager, fromSentry, startPrometheus } from "./lib/adapters.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(__dirname, "public");
@@ -207,6 +208,23 @@ const routes = {
     return { results: list.slice(0, 50).map((s) => body.ingestSignal(s)) };
   },
 
+  // Real tools: Prometheus Alertmanager and Sentry webhooks.
+  "POST /api/adapters/alertmanager": async (b) => {
+    const results = fromAlertmanager(b).map((r) => {
+      if (!r.ok) return r;
+      sim.log("WARN", "alertmanager", r.note);
+      return body.ingestSignal(r.signal);
+    });
+    return { results };
+  },
+
+  "POST /api/adapters/sentry": async (b) => {
+    const r = fromSentry(b);
+    // The event text goes into Pixel's overheard logs: untrusted, and scanned for prompt injection.
+    sim.log("ERROR", "sentry", r.note.slice(0, 400));
+    return { results: [body.ingestSignal(r.signal)] };
+  },
+
   "POST /api/postmortem": async () => {
     const inc = body.lastIncident();
     const pm = await writePostmortem(inc, sim.logs);
@@ -302,6 +320,8 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, "0.0.0.0", async () => {
   setInterval(tick, TICK_MS);
+  // The body is replaced on reset, so hand the adapter a pointer that always reaches the current one.
+  startPrometheus({ ingestSignal: (s) => body.ingestSignal(s) });
   const llm = await llmAvailable();
   const ips = Object.values(os.networkInterfaces()).flat().filter((i) => i && i.family === "IPv4" && !i.internal).map((i) => i.address);
   console.log("\n  Pixel is alive\n");
