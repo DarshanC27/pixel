@@ -1,0 +1,18 @@
+{
+  "name": "pixel",
+  "version": "1.0.0",
+  "description": "Pixel: your software system as a living creature. It gets sick when things break, tells you where it hurts, and writes the postmortem.",
+  "private": true,
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/smoke.js && node test/brain.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "*"
+  }
+}
