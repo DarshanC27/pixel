@@ -1,4 +1,5 @@
 import { connect, api, clock, el, fmt, diaryText, markdown, organIcon, STATUS_WORD } from "/common.js";
+import { createHerd } from "/herd.js";
 
 const $ = (id) => document.getElementById(id);
 const pixel = $("pixel");
@@ -9,6 +10,7 @@ let lastHeart = "ok";
 let state = null;
 let lastPm = null;
 let offlineTimer = null;
+let wasOffline = false;
 
 // ---------- voice ----------
 let voice = null;
@@ -62,8 +64,25 @@ function tone(freq, secs, vol = 0.05, type = "sine") {
 // ---------- rendering ----------
 const BEAT = { ok: 0.9, uneasy: 0.62, sick: 0.45, critical: 0.32, dead: 0 };
 
+// ---------- herd view ----------
+const herd = createHerd($("herdBox"));
+function setView(v) {
+  const isHerd = v === "herd";
+  $("herdBox").hidden = !isHerd;
+  pixel.style.display = isHerd ? "none" : "";
+  $("viewOne").classList.toggle("active", !isHerd);
+  $("viewHerd").classList.toggle("active", isHerd);
+  $("viewOne").setAttribute("aria-pressed", String(!isHerd));
+  $("viewHerd").setAttribute("aria-pressed", String(isHerd));
+  try { localStorage.setItem("pixel-view", v); } catch {}
+}
+$("viewOne").addEventListener("click", () => setView("one"));
+$("viewHerd").addEventListener("click", () => setView("herd"));
+try { if (localStorage.getItem("pixel-view") === "herd") setView("herd"); } catch {}
+
 function renderState(s) {
   state = s;
+  herd.update(s.organs, fmt);
   // mood
   [...pixel.classList].filter((c) => c.startsWith("mood-")).forEach((c) => pixel.classList.remove(c));
   pixel.classList.add(`mood-${s.mood}`);
@@ -202,13 +221,27 @@ connect({
     $("conn").className = "chip chip-ok";
     $("offline").hidden = true;
     clearTimeout(offlineTimer);
+    // After a drop (or a server restart), resync everything we might have missed.
+    if (wasOffline) {
+      wasOffline = false;
+      api("/api/state").then((s) => {
+        renderState(s);
+        $("diary").replaceChildren();
+        $("logs").replaceChildren();
+        s.diary.forEach(addDiary);
+        addLogs(s.logs);
+      }).catch(() => {});
+    }
   },
   offline: () => {
     $("conn").textContent = "Reconnecting…";
     $("conn").className = "chip chip-quiet";
     // Only shout about it if it lasts; brief blips are normal.
-    clearTimeout(offlineTimer);
-    offlineTimer = setTimeout(() => ($("offline").hidden = false), 2500);
+    // The browser retries every second; start the banner timer once per outage.
+    if (!wasOffline) {
+      wasOffline = true;
+      offlineTimer = setTimeout(() => ($("offline").hidden = false), 2500);
+    }
   },
   state: renderState,
   say: showSay,
@@ -234,7 +267,15 @@ connect({
   wave: () => replay("waving", 1900),
   external: (ref) => toast(`Declared in incident.io${ref.reference ? `: ${ref.reference}` : ""}`, 6000),
   postmortem: (pm) => openPm(pm),
-  reset: () => { $("diary").replaceChildren(); $("logs").replaceChildren(); bubble.textContent = "Hi. I'm Pixel."; },
+  reset: () => {
+    $("diary").replaceChildren();
+    $("logs").replaceChildren();
+    bubble.textContent = "Hi. I'm Pixel.";
+    bubble.className = "bubble";
+    $("heard").textContent = "";
+    pixel.classList.remove("shielded", "celebrate", "sneeze", "waving");
+    if ($("pmDialog").open) $("pmDialog").close();
+  },
 });
 
 // initial load
@@ -288,7 +329,14 @@ function listen() {
 }
 $("mic").addEventListener("click", listen);
 document.addEventListener("keydown", (e) => {
-  if (e.key.toLowerCase() === "m" && document.activeElement.tagName !== "INPUT") listen();
+  if (document.activeElement.tagName === "INPUT") return;
+  const k = e.key.toLowerCase();
+  if (k === "m") listen();
+  if (k === "h") setView($("herdBox").hidden ? "herd" : "one");
+  if (k === "r" && e.shiftKey) {
+    // Shift+R: instant demo reset from the stage itself.
+    api("/api/reset", {}).then(() => toast("Demo reset. Pixel is healthy again."));
+  }
 });
 
 $("voiceBtn").addEventListener("click", () => {
@@ -403,10 +451,13 @@ function senseFrame() {
   cam.xs.push({ t: now, x: cx, n });
   cam.xs = cam.xs.filter((p) => now - p.t < 1500);
   if (now - cam.lastWave < 5000 || cam.xs.length < 6) return;
+  // Walking past is one long sweep; a wave goes back and forth with lots of motion.
+  const avgMotion = cam.xs.reduce((a, p) => a + p.n, 0) / cam.xs.length;
+  if (avgMotion < 70) return;
   let flips = 0, dir = 0, anchor = cam.xs[0].x;
   for (const p of cam.xs) {
     const d = p.x - anchor;
-    if (Math.abs(d) < 0.06) continue;
+    if (Math.abs(d) < 0.08) continue;
     const s = Math.sign(d);
     if (dir && s !== dir) flips++;
     dir = s;
