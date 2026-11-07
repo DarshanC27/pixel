@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>On-call Phone</title>
+  <link rel="icon" href="/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -46,7 +47,7 @@
         c.classList.remove("new");
       } }, "Acknowledge");
       const c = el("article", { class: `notif${fresh && !p.acknowledged ? " new" : ""}` },
-        el("header", {}, el("span", { class: "avatar" }), "Pixel", el("small", {}, `${clock(p.at)} · ${p.incident || ""}`)),
+        el("header", {}, el("img", { class: "avatar-img", src: "/logo.svg", alt: "", width: "34", height: "34" }), "Pixel", el("small", {}, `${clock(p.at)} · ${p.incident || ""}`)),
         el("p", {}, p.text),
         p.acknowledged ? el("span", { class: "done" }, "Acknowledged.") : ackBtn);
       cards[p.id] = c;
