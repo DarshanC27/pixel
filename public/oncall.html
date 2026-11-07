@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>On-call Phone</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="page">
+    <div class="phone">
+      <div class="phone-top"><span id="time"></span><span>On call · you</span></div>
+      <h1>Messages from Pixel</h1>
+      <div id="list"><p class="empty">Quiet night. Pixel will message you if it feels unwell.</p></div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { connect, api, el, clock } from "/common.js";
+    const list = document.getElementById("list");
+    let audio = null;
+    document.addEventListener("click", () => { audio ||= new (window.AudioContext || window.webkitAudioContext)(); }, { once: true });
+
+    function buzz() {
+      navigator.vibrate?.([200, 100, 200]);
+      if (!audio) return;
+      [880, 660, 880].forEach((f, i) => {
+        const o = audio.createOscillator(), g = audio.createGain();
+        o.frequency.value = f; g.gain.value = 0.05; o.connect(g).connect(audio.destination);
+        o.start(audio.currentTime + i * 0.18); o.stop(audio.currentTime + i * 0.18 + 0.14);
+      });
+    }
+
+    const cards = {};
+    function markAcked(id, via) {
+      const c = cards[id];
+      if (!c) return;
+      c.classList.remove("new");
+      c.querySelector("button")?.replaceWith(el("span", { class: "done" }, via === "camera" ? "Acknowledged by waving at Pixel." : "Acknowledged."));
+    }
+
+    function card(p, fresh) {
+      const ackBtn = el("button", { onclick: async () => {
+        await api("/api/pages/ack", { id: p.id });
+        ackBtn.replaceWith(el("span", { class: "done" }, "Acknowledged. On my way."));
+        c.classList.remove("new");
+      } }, "Acknowledge");
+      const c = el("article", { class: `notif${fresh && !p.acknowledged ? " new" : ""}` },
+        el("header", {}, el("span", { class: "avatar" }), "Pixel", el("small", {}, `${clock(p.at)} · ${p.incident || ""}`)),
+        el("p", {}, p.text),
+        p.acknowledged ? el("span", { class: "done" }, "Acknowledged.") : ackBtn);
+      cards[p.id] = c;
+      return c;
+    }
+
+    function add(p, fresh) {
+      list.querySelector(".empty")?.remove();
+      list.prepend(card(p, fresh));
+    }
+
+    const { pages } = await api("/api/pages");
+    pages.forEach((p) => add(p, false));
+    connect({
+      page: (p) => { add(p, true); buzz(); },
+      ack: ({ id, via }) => markAcked(id, via),
+      reset: () => list.replaceChildren(el("p", { class: "empty" }, "Quiet night. Pixel will message you if it feels unwell.")),
+    });
+    setInterval(() => (document.getElementById("time").textContent = clock(Date.now()).slice(0, 5)), 1000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pixel</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="stage">
+  <header class="topbar">
+    <div class="brand"><span class="logo-dot"></span> Pixel <small>your system, with a face</small></div>
+    <div class="top-right">
+      <span id="incident" class="chip chip-ok">All good</span>
+      <span id="brainMode" class="chip chip-quiet">Brain: …</span>
+      <span id="conn" class="chip chip-quiet">Connecting…</span>
+    </div>
+  </header>
+
+  <main class="stage-grid">
+    <!-- Vitals -->
+    <section class="panel vitals" aria-label="Vitals">
+      <h2>Vitals</h2>
+      <ul id="vitals"></ul>
+      <p class="hint">Each organ is one part of the system. Health comes from plain code, never from the AI.</p>
+    </section>
+
+    <!-- Pixel -->
+    <section class="center" aria-label="Pixel">
+      <div id="bubble" class="bubble" aria-live="polite">Hi. I'm Pixel.</div>
+      <div id="heard" class="heard"></div>
+
+      <svg id="pixel" class="pixel mood-happy" viewBox="0 0 400 430" role="img" aria-label="Pixel, a round creature whose organs show system health">
+        <defs>
+          <radialGradient id="bodyGrad" cx="40%" cy="30%" r="75%">
+            <stop offset="0%" stop-color="var(--skin-light)"/>
+            <stop offset="100%" stop-color="var(--skin)"/>
+          </radialGradient>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="6" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <ellipse class="shadow" cx="200" cy="408" rx="118" ry="13"/>
+
+        <g class="creature">
+          <!-- antenna -->
+          <g class="antenna">
+            <path d="M200 78 Q 196 46 214 28" fill="none" stroke="var(--skin-dark)" stroke-width="6" stroke-linecap="round"/>
+            <circle class="antenna-light" cx="216" cy="24" r="11" filter="url(#glow)"/>
+          </g>
+          <!-- feet -->
+          <ellipse cx="148" cy="384" rx="38" ry="18" fill="var(--skin-dark)"/>
+          <ellipse cx="252" cy="384" rx="38" ry="18" fill="var(--skin-dark)"/>
+          <!-- arms -->
+          <path class="arm arm-l" d="M62 250 Q 22 262 30 300" fill="none" stroke="var(--skin-dark)" stroke-width="16" stroke-linecap="round"/>
+          <path class="arm arm-r" d="M338 250 Q 378 262 370 300" fill="none" stroke="var(--skin-dark)" stroke-width="16" stroke-linecap="round"/>
+          <!-- body -->
+          <path class="body" d="M200 72 C 314 72 352 160 352 248 C 352 338 292 384 200 384 C 108 384 48 338 48 248 C 48 160 86 72 200 72 Z" fill="url(#bodyGrad)" stroke="var(--skin-dark)" stroke-width="4"/>
+
+          <!-- skin = front end: rash spots -->
+          <g class="organ rash" data-organ="skin">
+            <circle cx="96" cy="200" r="7"/><circle cx="112" cy="222" r="5"/><circle cx="300" cy="196" r="8"/>
+            <circle cx="318" cy="230" r="5"/><circle cx="84" cy="300" r="6"/><circle cx="322" cy="300" r="7"/>
+            <circle cx="290" cy="340" r="5"/><circle cx="104" cy="338" r="5"/>
+          </g>
+
+          <!-- brain = auth (forehead) -->
+          <g class="organ brain" data-organ="brain">
+            <path d="M172 124 C 160 108 176 92 190 98 C 196 86 216 88 220 100 C 236 96 246 112 234 124 C 238 136 222 144 212 138 C 204 146 188 146 184 138 C 170 142 162 132 172 124 Z"/>
+            <path class="squiggle" d="M184 116 Q 192 108 200 118 Q 208 128 218 114" fill="none" stroke-width="3" stroke-linecap="round"/>
+          </g>
+
+          <!-- face -->
+          <g class="face">
+            <g class="eyes eyes-open">
+              <ellipse cx="152" cy="178" rx="20" ry="24" fill="#fff"/><circle class="pupil" cx="156" cy="182" r="11" fill="#1b1d2e"/><circle cx="160" cy="176" r="4" fill="#fff"/>
+              <ellipse cx="248" cy="178" rx="20" ry="24" fill="#fff"/><circle class="pupil" cx="252" cy="182" r="11" fill="#1b1d2e"/><circle cx="256" cy="176" r="4" fill="#fff"/>
+            </g>
+            <g class="eyes eyes-happy" fill="none" stroke="#1b1d2e" stroke-width="7" stroke-linecap="round">
+              <path d="M134 184 Q 152 160 170 184"/><path d="M230 184 Q 248 160 266 184"/>
+            </g>
+            <g class="eyes eyes-dead" stroke="#1b1d2e" stroke-width="7" stroke-linecap="round">
+              <path d="M138 166 L 166 194 M166 166 L 138 194"/><path d="M234 166 L 262 194 M262 166 L 234 194"/>
+            </g>
+            <g class="brows" stroke="#1b1d2e" stroke-width="6" stroke-linecap="round">
+              <path d="M128 146 L 168 156"/><path d="M272 146 L 232 156"/>
+            </g>
+            <ellipse class="cheek" cx="118" cy="214" rx="16" ry="9"/>
+            <ellipse class="cheek" cx="282" cy="214" rx="16" ry="9"/>
+            <path class="mouth mouth-smile" d="M176 214 Q 200 238 224 214" fill="none" stroke="#1b1d2e" stroke-width="6" stroke-linecap="round"/>
+            <path class="mouth mouth-flat" d="M180 222 Q 200 218 220 224" fill="none" stroke="#1b1d2e" stroke-width="6" stroke-linecap="round"/>
+            <path class="mouth mouth-frown" d="M178 228 Q 200 208 222 228" fill="none" stroke="#1b1d2e" stroke-width="6" stroke-linecap="round"/>
+            <ellipse class="mouth mouth-open" cx="200" cy="224" rx="12" ry="14" fill="#1b1d2e"/>
+            <g class="sweat">
+              <path d="M300 128 Q 310 146 300 154 Q 290 146 300 128 Z" fill="#8fd3ff"/>
+              <path d="M98 140 Q 106 154 98 160 Q 90 154 98 140 Z" fill="#8fd3ff"/>
+            </g>
+          </g>
+
+          <!-- belly window with organs -->
+          <rect class="belly" x="112" y="246" width="176" height="122" rx="56"/>
+          <g class="organ lungs" data-organ="lungs">
+            <ellipse class="lung" cx="160" cy="288" rx="24" ry="30"/>
+            <ellipse class="lung" cx="240" cy="288" rx="24" ry="30"/>
+          </g>
+          <g class="organ stomach" data-organ="stomach">
+            <ellipse cx="200" cy="342" rx="34" ry="16"/>
+          </g>
+          <g class="organ heart" data-organ="heart">
+            <path d="M200 312 C 172 292 176 266 192 266 C 198 266 200 272 200 274 C 200 272 202 266 208 266 C 224 266 228 292 200 312 Z"/>
+          </g>
+        </g>
+
+        <!-- immune shield -->
+        <g class="shield">
+          <circle cx="200" cy="230" r="192" fill="var(--shield-fill)" stroke="var(--shield)" stroke-width="6" filter="url(#glow)"/>
+        </g>
+        <text class="achoo" x="300" y="70" text-anchor="middle">ACHOO!</text>
+        <g class="sparkles" fill="var(--good)">
+          <path d="M70 90 l6 14 14 6 -14 6 -6 14 -6 -14 -14 -6 14 -6z"/>
+          <path d="M330 70 l5 11 11 5 -11 5 -5 11 -5 -11 -11 -5 11 -5z"/>
+          <path d="M350 330 l5 11 11 5 -11 5 -5 11 -5 -11 -11 -5 11 -5z"/>
+          <path d="M40 320 l4 9 9 4 -9 4 -4 9 -4 -9 -9 -4 9 -4z"/>
+        </g>
+      </svg>
+
+      <canvas id="ecg" class="ecg" width="900" height="110" aria-label="Heart monitor for the database"></canvas>
+      <div class="ecg-label"><span>Heart monitor</span><span id="ecgValue">database —</span></div>
+
+      <div class="controls">
+        <button id="mic" class="mic" title="Talk to Pixel (or press M)" aria-label="Talk to Pixel">
+          <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
+        </button>
+        <form id="askForm" class="ask">
+          <input id="askInput" autocomplete="off" placeholder="Ask Pixel: what hurts?" aria-label="Ask Pixel a question">
+          <button type="submit">Ask</button>
+        </form>
+        <button id="camBtn" class="secondary" aria-pressed="false" title="Pixel's eyes follow you; wave to acknowledge a page">Camera off</button>
+        <button id="pmBtn" class="secondary">Postmortem</button>
+        <button id="voiceBtn" class="secondary" aria-pressed="true">Voice on</button>
+      </div>
+    </section>
+
+    <!-- Diary + logs -->
+    <section class="panel diary" aria-label="Symptom diary">
+      <h2>Symptom diary</h2>
+      <ol id="diary"></ol>
+      <h2 class="logs-title">Overheard logs</h2>
+      <ol id="logs" class="logs"></ol>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="alert"></div>
+
+  <div id="camBox" class="cam-box" hidden>
+    <video id="camVideo" autoplay muted playsinline></video>
+    <span>Camera stays on this laptop. Wave to acknowledge.</span>
+  </div>
+
+  <div id="wake" class="wake">
+    <button id="wakeBtn">Tap to wake Pixel</button>
+    <p>Turns on Pixel's voice. Open <a href="/chaos" target="_blank">/chaos</a> on another screen to break things.</p>
+  </div>
+
+  <dialog id="pmDialog" class="pm">
+    <div class="pm-head">
+      <strong>Postmortem</strong>
+      <span id="pmSource" class="chip chip-quiet"></span>
+      <span class="spacer"></span>
+      <button id="pmCopy" class="secondary">Copy</button>
+      <button id="pmDownload" class="secondary">Download .md</button>
+      <button id="pmClose">Close</button>
+    </div>
+    <article id="pmBody" class="pm-body"></article>
+  </dialog>
+
+  <script type="module" src="/stage.js"></script>
+</body>
+</html>

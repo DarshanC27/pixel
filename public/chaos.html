@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chaos Panel</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="page">
+    <h1>Pixel Mart · chaos panel</h1>
+    <p class="lead">Break the demo shop and watch Pixel react on the <a href="/" target="_blank">stage</a>. Keys 1–8 fire the buttons, 0 fixes everything.</p>
+
+    <div id="buttons" class="chaos-grid"></div>
+
+    <div class="two-col">
+      <section class="panel">
+        <h2>Live metrics</h2>
+        <table class="metrics">
+          <thead><tr><th>Organ</th><th>System</th><th>Reading</th><th>Health</th></tr></thead>
+          <tbody id="metrics"></tbody>
+        </table>
+      </section>
+      <section class="panel">
+        <h2>Connect anything</h2>
+        <p class="hint" style="margin-top:0">Any tool can make Pixel sick by POSTing a signal. Try it from a terminal:</p>
+        <pre id="curl" style="white-space:pre-wrap;font-size:12px;background:var(--bg-2);padding:10px;border-radius:10px;margin:0"></pre>
+        <p class="hint">Signals expire after 60 seconds, so Pixel recovers when the tool stops complaining.</p>
+        <button id="reset" class="secondary" style="margin-top:8px">Reset the whole demo</button>
+      </section>
+    </div>
+  </main>
+
+  <script type="module">
+    import { connect, api, el, fmt } from "/common.js";
+
+    const DESC = {
+      kill_db: ["Heart stops. API and website suffer too.", "danger"],
+      slow_db: ["Heart races. Slow queries everywhere.", "danger"],
+      leak_db: ["Latency creeps up slowly. Pixel sneezes BEFORE it gets sick.", "danger"],
+      slow_network: ["Lungs wheeze. Requests time out.", "danger"],
+      break_auth: ["Brain gets dizzy. Nobody can log in.", "danger"],
+      flood_queue: ["Stomach bloats with 250k jobs.", "danger"],
+      frontend_errors: ["Skin breaks out in a rash.", "danger"],
+      poison_logs: ["A log line tries to trick the AI into saying 'all fine'.", "poison"],
+      heal: ["Roll back, restart, scale up.", "heal"],
+    };
+    const ORDER = ["kill_db", "leak_db", "slow_db", "slow_network", "break_auth", "flood_queue", "frontend_errors", "poison_logs", "heal"];
+    const KEYS = { kill_db: "1", slow_db: "2", slow_network: "3", break_auth: "4", flood_queue: "5", frontend_errors: "6", poison_logs: "7", leak_db: "8", heal: "0" };
+
+    const s = await api("/api/state");
+    const buttons = {};
+    for (const id of ORDER) {
+      const b = el("button", { class: `chaos-btn ${DESC[id][1]}`, onclick: () => fire(id) },
+        el("strong", {}, s.chaos[id].label), el("span", {}, DESC[id][0]), el("kbd", {}, KEYS[id]));
+      buttons[id] = b;
+      document.getElementById("buttons").append(b);
+    }
+    async function fire(id) {
+      buttons[id].classList.remove("fired"); void buttons[id].offsetWidth; buttons[id].classList.add("fired");
+      await api("/api/chaos", { action: id });
+    }
+    document.addEventListener("keydown", (e) => {
+      const id = Object.keys(KEYS).find((k) => KEYS[k] === e.key);
+      if (id) fire(id);
+    });
+    document.getElementById("reset").onclick = () => api("/api/reset", {});
+
+    const origin = location.origin;
+    document.getElementById("curl").textContent =
+`curl -X POST ${origin}/api/signal \\
+  -H "Content-Type: application/json" \\
+  -d '{"source":"datadog","organ":"lungs","metric":"api_p95_ms","value":3000}'`;
+
+    function render(st) {
+      document.getElementById("metrics").replaceChildren(...st.organs.map((o) =>
+        el("tr", { class: `st-${o.status}` },
+          el("td", {}, o.name), el("td", {}, o.system),
+          el("td", { class: "val" }, o.status === "dead" ? "STOPPED" : fmt(o)),
+          el("td", { class: "val" }, `${o.health}%`))));
+    }
+    render(s);
+    connect({ state: render });
+  </script>
+</body>
+</html>
