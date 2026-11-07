@@ -14,6 +14,12 @@
 
     <div id="buttons" class="chaos-grid"></div>
 
+    <section id="realPanel" class="panel real-panel" hidden>
+      <h2>Real processes <span id="realNote"></span></h2>
+      <div id="procs" class="procs"></div>
+      <p class="hint" style="margin-bottom:0">These are real programs on this computer. <a id="shopLink" href="#" target="_blank">Open the real shop</a> and buy something yourself while you break things.</p>
+    </section>
+
     <div class="two-col">
       <section class="panel">
         <h2>Live metrics</h2>
@@ -83,6 +89,22 @@
     }
     render(s);
     connect({ state: render });
+
+    // Real mode: show the actual processes, with their PIDs, refreshed every 2 seconds.
+    async function showProcs() {
+      const st = await api("/api/state").catch(() => null);
+      if (!st || st.mode !== "real" || !st.processes) return;
+      document.getElementById("realPanel").hidden = false;
+      document.getElementById("shopLink").href = st.shopUrl;
+      document.getElementById("realNote").textContent = `· ${st.processes.filter((p) => p.up).length} running`;
+      document.getElementById("procs").replaceChildren(...st.processes.map((p) =>
+        el("div", { class: `proc ${p.up ? "up" : "down"}` },
+          el("strong", {}, p.name),
+          el("span", {}, p.up ? `pid ${p.pid}` : "STOPPED"),
+          el("small", {}, p.port ? `:${p.port}` : "worker"))));
+    }
+    showProcs();
+    setInterval(showProcs, 2000);
   </script>
 </body>
 </html>

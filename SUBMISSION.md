@@ -50,6 +50,12 @@ Pixel raises a glowing immune shield and says **"Nice try."** It can't be fooled
 3. **A lie guard** rejects any AI reply that claims "everything's fine" while an organ is sick.
 4. **The postmortem records every injection attempt** as a security finding.
 
+## It's a real, working prototype
+
+Pixel isn't animating fake numbers. One command starts **Pixel Mart**, a real online shop: six separate programs (a SQL database, auth, an orders API, job workers, a storefront and a stream of shoppers) talking over the network. You can open the shop and buy something yourself.
+
+Pixel measures the real p95 latency, error rates and queue depth of every service, every second. "Kill the database" really kills the database process, so checkout really fails. "Fix everything" really restarts it as a new process, rolls back the bad deploys and starts extra workers to drain the queue. The prompt injection arrives the way it does in real life: inside a customer's gift message, which the orders API writes into its logs.
+
 ## How it works
 
 ```

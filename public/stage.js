@@ -286,6 +286,8 @@ api("/api/state").then((s) => {
 });
 api("/api/health").then((h) => {
   $("brainMode").textContent = h.llm ? "Brain: Claude" : "Brain: offline";
+  $("watching").textContent = h.mode === "real" ? "Watching: Pixel Mart (live)" : "Watching: simulation";
+  $("watching").className = h.mode === "real" ? "chip chip-ok" : "chip chip-quiet";
 });
 setInterval(() => state?.incident && ($("incident").textContent = `${state.incident.id} · ${elapsed(state.incident.startedAt)}`), 1000);
 

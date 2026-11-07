@@ -57,6 +57,7 @@ const server = spawn(process.execPath, ["server.js"], {
     ...process.env,
     PORT: String(PORT),
     PIXEL_OFFLINE: "1",
+    PIXEL_MODE: "sim",
     INCIDENT_IO_API_KEY: "test-key",
     INCIDENT_IO_BASE_URL: `http://localhost:${MOCK_PORT}`,
     SLACK_WEBHOOK_URL: `http://localhost:${MOCK_PORT}/slack`,
