@@ -17,14 +17,18 @@ import {
 import { STATUS_RANK } from "./lib/organs.js";
 import { llmAvailable, modelName } from "./lib/llm.js";
 import { integrationStatus, slackPage, declareIncident, updateIncidentSummary } from "./lib/integrations.js";
-import { fromAlertmanager, fromSentry, startPrometheus } from "./lib/adapters.js";
+import { fromAlertmanager, fromSentry, startPrometheus, startProbes } from "./lib/adapters.js";
+import { createStack } from "./lib/stack.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(__dirname, "public");
 const PORT = Number(process.env.PORT || 3000);
 const TICK_MS = 1000;
 
-let sim = createSim();
+// "real" (default): Pixel watches the real Pixel Mart stack running as separate processes.
+// "sim": the built-in simulator, a backup that needs nothing else.
+const MODE = process.env.PIXEL_MODE === "sim" ? "sim" : "real";
+let sim = MODE === "sim" ? createSim() : null; // in real mode, set to the stack once it has booted
 let body = createBody();
 let pages = []; // messages sent to the on-call phone
 let lastLogIndex = 0;
@@ -67,6 +71,7 @@ async function declareExternally(inc, snap, pageText) {
 // ---------- the heartbeat loop ----------
 
 function tick() {
+  if (!sim) return;
   const metrics = sim.tick();
   const events = body.update(metrics);
   const snap = body.snapshot();
@@ -170,7 +175,7 @@ async function readBody(req) {
 }
 
 const routes = {
-  "GET /api/health": async () => ({ ok: true, llm: await llmAvailable(), model: modelName, ...integrationStatus() }),
+  "GET /api/health": async () => ({ ok: true, mode: MODE, llm: await llmAvailable(), model: modelName, ...integrationStatus() }),
 
   "GET /api/state": async () => ({
     ...body.snapshot(),
@@ -180,6 +185,9 @@ const routes = {
     logs: sim.logs.slice(-40),
     pages,
     chaos: CHAOS_ACTIONS,
+    mode: MODE,
+    processes: sim.processes ? sim.processes() : null,
+    shopUrl: sim.shopUrl || null,
   }),
 
   "POST /api/chaos": async (b) => {
@@ -265,7 +273,8 @@ const routes = {
   },
 
   "POST /api/reset": async () => {
-    sim = createSim();
+    if (MODE === "real") await sim.reset(); // heal the real stack: restart, roll back, scale down
+    else sim = createSim();
     body = createBody();
     pages = [];
     lastLogIndex = 0;
@@ -318,10 +327,35 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+if (MODE === "real") {
+  console.log("\n  Starting Pixel Mart (real services)…");
+  try {
+    sim = await createStack();
+  } catch (err) {
+    console.error(`\n  Could not start the real stack: ${err.message}`);
+    console.error("  Is another copy of Pixel already running? Close it, or run with PIXEL_MODE=sim.\n");
+    process.exit(1);
+  }
+  const shutdown = async () => {
+    await sim.stop();
+    process.exit(0);
+  };
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+  process.on("exit", () => sim.stop());
+}
+
 server.listen(PORT, "0.0.0.0", async () => {
   setInterval(tick, TICK_MS);
-  // The body is replaced on reset, so hand the adapter a pointer that always reaches the current one.
-  startPrometheus({ ingestSignal: (s) => body.ingestSignal(s) });
+  // The body is replaced on reset, so hand the adapters a pointer that always reaches the current one.
+  const sink = { ingestSignal: (s) => body.ingestSignal(s) };
+  startPrometheus(sink);
+  startProbes(sink);
+  if (MODE === "real") {
+    console.log(`\n  Pixel Mart is running for real: ${sim.processes().length} processes`);
+    for (const p of sim.processes()) console.log(`    ${p.name.padEnd(12)} pid ${String(p.pid).padEnd(7)} ${p.port ? `port ${p.port}` : ""}`);
+    console.log(`  Shop (try buying something)  ${sim.shopUrl}`);
+  }
   const llm = await llmAvailable();
   const ips = Object.values(os.networkInterfaces()).flat().filter((i) => i && i.family === "IPv4" && !i.internal).map((i) => i.address);
   console.log("\n  Pixel is alive\n");
