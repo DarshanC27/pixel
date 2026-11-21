@@ -1,6 +1,19 @@
-# Pixel: your system, with a face
+<div align="center">
 
-Pixel is a live creature that **is** your software system. When the system breaks, Pixel gets sick in the matching body part, tells you out loud where it hurts, pages the on-call engineer in character, blocks prompt-injection attacks hidden in logs, and writes the postmortem when it recovers.
+<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0:0a0e27,100:00b4d8&height=200&section=header&text=Pixel&fontSize=56&fontColor=ffffff&fontAlignY=36&desc=Your%20software%20system%2C%20with%20a%20face&descSize=17&descAlignY=58&animation=fadeIn" alt="Pixel"/>
+
+**A live creature that _is_ your software system.** It gets sick in the matching body part when something breaks, tells you out loud where it hurts, and writes the postmortem.
+
+<img src="https://img.shields.io/badge/Node.js-server-339933?style=for-the-badge&labelColor=0a0e27&logo=nodedotjs&logoColor=white" alt="Node.js"/>
+<img src="https://img.shields.io/badge/Prometheus-Alertmanager-e6522c?style=for-the-badge&labelColor=0a0e27&logo=prometheus&logoColor=white" alt="Prometheus"/>
+<img src="https://img.shields.io/badge/Sentry-Slack-362d59?style=for-the-badge&labelColor=0a0e27&logo=sentry&logoColor=white" alt="Sentry"/>
+<img src="https://img.shields.io/badge/Licence-MIT-16213e?style=for-the-badge&labelColor=0a0e27" alt="Licence"/>
+
+[Run it](#run-it-30-seconds) · [The story](SUBMISSION.md)
+
+</div>
+
+---
 
 Built for the incident.io challenge: *a live agent with personality that reacts in real time.* Read the full story in [SUBMISSION.md](SUBMISSION.md).
 
